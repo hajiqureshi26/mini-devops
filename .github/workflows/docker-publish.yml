@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build, Push and Deploy
 
 on:
   push:
@@ -10,8 +10,8 @@ permissions:
   contents: read
 
 jobs:
-  docker:
-    name: Build and publish image
+  build:
+    name: Build and publish Docker image
     runs-on: ubuntu-latest
 
     steps:
@@ -35,3 +35,75 @@ jobs:
           tags: |
             hajiqureshi26/mini-devops-web:latest
             hajiqureshi26/mini-devops-web:${{ github.sha }}
+
+  deploy:
+    name: Deploy to Kubernetes through AWS Systems Manager
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Configure AWS credentials using GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-south-1
+
+      - name: Deploy image to K3s on EC2
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+          INSTANCE_ID: i-0a85aaa2c4a1d61dd
+          AWS_REGION: ap-south-1
+        run: |
+          set -euo pipefail
+
+          PARAMETERS=$(jq -n --arg tag "$IMAGE_TAG" '{
+            commands: [
+              "sudo kubectl set image deployment/mini-devops-web web=hajiqureshi26/mini-devops-web:" + $tag,
+              "sudo kubectl rollout status deployment/mini-devops-web --timeout=180s"
+            ]
+          }')
+
+          COMMAND_ID=$(aws ssm send-command \
+            --region "$AWS_REGION" \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy mini-devops image $IMAGE_TAG" \
+            --parameters "$PARAMETERS" \
+            --query 'Command.CommandId' \
+            --output text)
+
+          echo "SSM command ID: $COMMAND_ID"
+
+          for attempt in $(seq 1 60); do
+            STATUS=$(aws ssm get-command-invocation \
+              --region "$AWS_REGION" \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query 'Status' \
+              --output text 2>/dev/null || true)
+
+            echo "Deployment status: ${STATUS:-Pending}"
+
+            case "$STATUS" in
+              Success)
+                echo "Deployment completed successfully."
+                exit 0
+                ;;
+              Failed|Cancelled|TimedOut)
+                aws ssm get-command-invocation \
+                  --region "$AWS_REGION" \
+                  --command-id "$COMMAND_ID" \
+                  --instance-id "$INSTANCE_ID" \
+                  --output json
+                exit 1
+                ;;
+            esac
+
+            sleep 5
+          done
+
+          echo "Timed out waiting for the SSM deployment command."
+          exit 1
