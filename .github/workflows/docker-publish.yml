@@ -67,7 +67,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ap-east-1
+          aws-region: us-east-1
 
       - name: Deploy image to K3s on EC2
         env:
