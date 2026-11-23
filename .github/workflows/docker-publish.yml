@@ -1,0 +1,184 @@
+
+name: Build, Push and Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and publish Docker image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            hajiqureshi26/mini-devops-web:latest
+            hajiqureshi26/mini-devops-web:${{ github.sha }}
+
+  deploy:
+    name: Deploy to Kubernetes through AWS Systems Manager
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Test GitHub OIDC endpoint connectivity
+        run: |
+          echo "Testing OIDC discovery endpoint..."
+          curl -sS -o /dev/null -w "Discovery HTTP: %{http_code}\n" \
+            https://token.actions.githubusercontent.com/.well-known/openid-configuration
+
+          echo "Testing JWKS endpoint..."
+          curl -sS -o /dev/null -w "JWKS HTTP: %{http_code}\n" \
+            https://token.actions.githubusercontent.com/.well-known/jwks
+
+      - name: Inspect safe GitHub OIDC claims
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TOKEN=$(curl -sS \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" \
+            | jq -r '.value')
+
+          python3 -c '
+          import base64, json, sys
+          p=sys.argv[1].split(".")[1]
+          p += "="*((4-len(p)%4)%4)
+          d=json.loads(base64.urlsafe_b64decode(p))
+          print(json.dumps({k:d.get(k) for k in ("iss","aud","sub")},indent=2))
+          ' "$TOKEN"
+
+          unset TOKEN
+
+      - name: Verify OIDC signing key
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TOKEN=$(curl -sS \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" \
+            | jq -r '.value')
+
+          TOKEN_KID=$(python3 -c '
+          import base64,json,sys
+          h=sys.argv[1].split(".")[0]
+          h += "="*((4-len(h)%4)%4)
+          d=json.loads(base64.urlsafe_b64decode(h))
+          print(d.get("kid",""))
+          ' "$TOKEN")
+
+          TOKEN_ALG=$(python3 -c '
+          import base64,json,sys
+          h=sys.argv[1].split(".")[0]
+          h += "="*((4-len(h)%4)%4)
+          d=json.loads(base64.urlsafe_b64decode(h))
+          print(d.get("alg",""))
+          ' "$TOKEN")
+
+          JWKS=$(curl -sS \
+            https://token.actions.githubusercontent.com/.well-known/jwks)
+
+          echo "JWT algorithm: $TOKEN_ALG"
+          echo "JWT key ID: $TOKEN_KID"
+
+          if echo "$JWKS" | jq -e --arg kid "$TOKEN_KID" \
+            '.keys[] | select(.kid == $kid)' >/dev/null; then
+            echo "RESULT: Signing key exists in GitHub JWKS"
+          else
+            echo "RESULT: Signing key NOT FOUND in GitHub JWKS"
+            exit 1
+          fi
+
+          unset TOKEN
+
+      - name: Configure AWS credentials using GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+          audience: sts.amazonaws.com
+
+      - name: Deploy image to K3s on EC2
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+          INSTANCE_ID: i-0a85aaa2c4a1d61dd
+          AWS_REGION: ap-south-1
+        run: |
+          set -euo pipefail
+
+          PARAMETERS=$(jq -n --arg tag "$IMAGE_TAG" '{
+            commands: [
+              "sudo kubectl set image deployment/mini-devops-web web=hajiqureshi26/mini-devops-web:" + $tag,
+              "sudo kubectl rollout status deployment/mini-devops-web --timeout=180s"
+            ]
+          }')
+
+          COMMAND_ID=$(aws ssm send-command \
+            --region "$AWS_REGION" \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy mini-devops image $IMAGE_TAG" \
+            --parameters "$PARAMETERS" \
+            --query 'Command.CommandId' \
+            --output text)
+
+          echo "SSM command ID: $COMMAND_ID"
+
+          for attempt in $(seq 1 60); do
+            STATUS=$(aws ssm get-command-invocation \
+              --region "$AWS_REGION" \
+              --command-id "$COMMAND_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query 'Status' \
+              --output text 2>/dev/null || true)
+
+            echo "Deployment status: ${STATUS:-Pending}"
+
+            case "$STATUS" in
+              Success)
+                echo "Deployment completed successfully."
+                exit 0
+                ;;
+              Failed|Cancelled|TimedOut)
+                aws ssm get-command-invocation \
+                  --region "$AWS_REGION" \
+                  --command-id "$COMMAND_ID" \
+                  --instance-id "$INSTANCE_ID" \
+                  --output json
+                exit 1
+                ;;
+            esac
+
+            sleep 5
+          done
+
+          echo "Timed out waiting for the SSM deployment command."
+          exit 1
