@@ -1,112 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="A simple web application for learning Docker, Kubernetes, Terraform, and CI/CD deployment on AWS.">
-  <title>Mini DevOps Project</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A simple web application for learning Docker, Kubernetes, Terraform, and CI/CD deployment on AWS.">
+    <title>Mini DevOps Project</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <header class="site-header">
-    <a class="brand" href="#" aria-label="Mini DevOps home">
-      <span class="brand-mark">D</span>
-      <span>Mini<span class="brand-accent">DevOps</span></span>
-    </a>
-    <span class="status"><span class="status-dot"></span> Deployment lab</span>
-  </header>
+    <header class="site-header">
+        <a class="brand" href="#" aria-label="Mini DevOps home">
+            <span class="brand-mark">D</span>
+            <span>Mini<span class="brand-accent">DevOps CI/CD By Abdul Rahman Qureshi </span></span>
+        </a>
 
-  <main>
-    <section class="hero">
-      <div class="eyebrow"><span class="eyebrow-line"></span> LEARN BY BUILDING</div>
-      <h1>From code to<br><span>the cloud.</span></h1>
-      <p class="intro">A small application with a real-world deployment journey. Explore the tools that take software from a developer's machine to AWS.</p>
-      <a class="primary-link" href="#pipeline">Explore the pipeline <span aria-hidden="true">↓</span></a>
-      <div class="hero-note">
-        <span class="note-icon">✦</span>
-        <span>Small app. Real DevOps workflow.</span>
-      </div>
-    </section>
+        <span class="status"><span class="status-dot"></span> Deployment lab</span>
+    </header>
 
-    <section class="pipeline-section" id="pipeline">
-      <div class="section-heading">
-        <div>
-          <p class="section-kicker">THE TOOLCHAIN</p>
-          <h2>Our deployment pipeline</h2>
-        </div>
-        <p class="section-description">Each tool has one job. Together, they deliver the application.</p>
-      </div>
+    <main>
+        <section class="hero">
+            <div class="eyebrow"><span class="eyebrow-line"></span> LEARN BY BUILDING</div>
+            <h1>From code to<br><span>the cloud.</span></h1>
+            <p class="intro">A small application with a real-world deployment journey. Explore the tools that take software from a developer's machine to AWS.</p>
+            <a class="primary-link" href="#pipeline">Explore the pipeline <span aria-hidden="true">↓</span></a>
+            <div class="hero-note">
+                <span class="note-icon">✦</span>
+                <span>Small app. Real DevOps workflow.</span>
+            </div>
+        </section>
 
-      <div class="tool-grid">
-        <article class="tool-card">
-          <div class="tool-number">01</div>
-          <div class="tool-icon git-icon">⌘</div>
-          <h3>Git & GitHub</h3>
-          <p>Track source code and collaborate through version control.</p>
-          <span class="tool-tag">SOURCE</span>
-        </article>
-        <article class="tool-card">
-          <div class="tool-number">02</div>
-          <div class="tool-icon docker-icon">▣</div>
-          <h3>Docker</h3>
-          <p>Package the website and its runtime into a portable image.</p>
-          <span class="tool-tag">CONTAINER</span>
-        </article>
-        <article class="tool-card">
-          <div class="tool-number">03</div>
-          <div class="tool-icon k8s-icon">✣</div>
-          <h3>Kubernetes</h3>
-          <p>Run, expose, and manage application containers.</p>
-          <span class="tool-tag">ORCHESTRATION</span>
-        </article>
-        <article class="tool-card">
-          <div class="tool-number">04</div>
-          <div class="tool-icon terraform-icon">▲</div>
-          <h3>Terraform</h3>
-          <p>Provision cloud infrastructure using configuration files.</p>
-          <span class="tool-tag">INFRASTRUCTURE</span>
-        </article>
-        <article class="tool-card">
-          <div class="tool-number">05</div>
-          <div class="tool-icon actions-icon">↗</div>
-          <h3>GitHub Actions</h3>
-          <p>Automate build, validation, image publishing, and deployment.</p>
-          <span class="tool-tag">CI / CD</span>
-        </article>
-        <article class="tool-card aws-card">
-          <div class="tool-number">06</div>
-          <div class="tool-icon aws-icon">☁</div>
-          <h3>AWS</h3>
-          <p>Host the infrastructure and make the application reachable.</p>
-          <span class="tool-tag">CLOUD</span>
-        </article>
-      </div>
-    </section>
+        <section class="pipeline-section" id="pipeline">
+            <div class="section-heading">
+                <div>
+                    <p class="section-kicker">THE TOOLCHAIN</p>
+                    <h2>Our deployment pipeline</h2>
+                </div>
+                <p class="section-description">Each tool has one job. Together, they deliver the application.</p>
+            </div>
 
-    <section class="goal-section">
-      <div class="goal-copy">
-        <p class="section-kicker">THE MISSION</p>
-        <h2>One small app.<br><span>End-to-end delivery.</span></h2>
-        <p>When the pipeline is ready, a code push will trigger an automated build and update the running application in our Kubernetes environment on AWS.</p>
-      </div>
-      <div class="goal-terminal" aria-label="Example deployment pipeline">
-        <div class="terminal-top"><span></span><span></span><span></span><small>deployment.sh</small></div>
-        <div class="terminal-body">
-          <p><b>$</b> git push origin main</p>
-          <p class="terminal-muted">→ GitHub Actions started</p>
-          <p class="terminal-muted">→ Docker image built</p>
-          <p class="terminal-muted">→ Image pushed to registry</p>
-          <p class="terminal-muted">→ Kubernetes deployment updated</p>
-          <p class="terminal-success">✓ Deployment complete</p>
-        </div>
-      </div>
-    </section>
-  </main>
+            <div class="tool-grid">
+                <article class="tool-card">
+                    <div class="tool-number">01</div>
+                    <div class="tool-icon git-icon">⌘</div>
+                    <h3>Git & GitHub</h3>
+                    <p>Track source code and collaborate through version control.</p>
+                    <span class="tool-tag">SOURCE</span>
+                </article>
+                <article class="tool-card">
+                    <div class="tool-number">02</div>
+                    <div class="tool-icon docker-icon">▣</div>
+                    <h3>Docker</h3>
+                    <p>Package the website and its runtime into a portable image.</p>
+                    <span class="tool-tag">CONTAINER</span>
+                </article>
+                <article class="tool-card">
+                    <div class="tool-number">03</div>
+                    <div class="tool-icon k8s-icon">✣</div>
+                    <h3>Kubernetes</h3>
+                    <p>Run, expose, and manage application containers.</p>
+                    <span class="tool-tag">ORCHESTRATION</span>
+                </article>
+                <article class="tool-card">
+                    <div class="tool-number">04</div>
+                    <div class="tool-icon terraform-icon">▲</div>
+                    <h3>Terraform</h3>
+                    <p>Provision cloud infrastructure using configuration files.</p>
+                    <span class="tool-tag">INFRASTRUCTURE</span>
+                </article>
+                <article class="tool-card">
+                    <div class="tool-number">05</div>
+                    <div class="tool-icon actions-icon">↗</div>
+                    <h3>GitHub Actions</h3>
+                    <p>Automate build, validation, image publishing, and deployment.</p>
+                    <span class="tool-tag">CI / CD</span>
+                </article>
+                <article class="tool-card aws-card">
+                    <div class="tool-number">06</div>
+                    <div class="tool-icon aws-icon">☁</div>
+                    <h3>AWS</h3>
+                    <p>Host the infrastructure and make the application reachable.</p>
+                    <span class="tool-tag">CLOUD</span>
+                </article>
+            </div>
+        </section>
 
-  <footer>
-    <span class="footer-brand">Mini<span class="brand-accent">DevOps</span></span>
-    <span>Built for learning. Deployed with purpose.</span>
-    <span class="version">VERSION 1.0.0</span>
-  </footer>
+        <section class="goal-section">
+            <div class="goal-copy">
+                <p class="section-kicker">THE MISSION</p>
+                <h2>One small app.<br><span>End-to-end delivery.</span></h2>
+                <p>When the pipeline is ready, a code push will trigger an automated build and update the running application in our Kubernetes environment on AWS.</p>
+            </div>
+            <div class="goal-terminal" aria-label="Example deployment pipeline">
+                <div class="terminal-top"><span></span><span></span><span></span><small>deployment.sh</small></div>
+                <div class="terminal-body">
+                    <p><b>$</b> git push origin main</p>
+                    <p class="terminal-muted">→ GitHub Actions started</p>
+                    <p class="terminal-muted">→ Docker image built</p>
+                    <p class="terminal-muted">→ Image pushed to registry</p>
+                    <p class="terminal-muted">→ Kubernetes deployment updated</p>
+                    <p class="terminal-success">✓ Deployment complete</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <span class="footer-brand">Mini<span class="brand-accent">DevOps</span></span>
+        <span>Built for learning. Deployed with purpose.</span>
+        <span class="version">VERSION 1.0.0</span>
+    </footer>
 </body>
+
 </html>
