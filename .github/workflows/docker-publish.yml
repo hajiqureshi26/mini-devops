@@ -36,16 +36,6 @@ jobs:
             hajiqureshi26/mini-devops-web:latest
             hajiqureshi26/mini-devops-web:${{ github.sha }}
 
-  - name: Test GitHub OIDC endpoint connectivity
-  run: |
-    echo "Testing OIDC discovery endpoint..."
-    curl -sS -o /dev/null -w "Discovery HTTP: %{http_code}\n" \
-      https://token.actions.githubusercontent.com/.well-known/openid-configuration
-
-    echo "Testing JWKS endpoint..."
-    curl -sS -o /dev/null -w "JWKS HTTP: %{http_code}\n" \
-      https://token.actions.githubusercontent.com/.well-known/jwks
-
   deploy:
     name: Deploy to Kubernetes through AWS Systems Manager
     needs: build
@@ -55,6 +45,16 @@ jobs:
       id-token: write
 
     steps:
+      - name: Test GitHub OIDC endpoint connectivity
+        run: |
+          echo "Testing OIDC discovery endpoint..."
+          curl -sS -o /dev/null -w "Discovery HTTP: %{http_code}\n" \
+            https://token.actions.githubusercontent.com/.well-known/openid-configuration
+
+          echo "Testing JWKS endpoint..."
+          curl -sS -o /dev/null -w "JWKS HTTP: %{http_code}\n" \
+            https://token.actions.githubusercontent.com/.well-known/jwks
+
       - name: Inspect safe GitHub OIDC claims
         run: |
           set -euo pipefail
