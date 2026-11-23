@@ -73,7 +73,7 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.sha }}
           INSTANCE_ID: i-0a85aaa2c4a1d61dd
-          AWS_REGION: ap-south-1
+          AWS_REGION: us-east-1
         run: |
           set -euo pipefail
 
